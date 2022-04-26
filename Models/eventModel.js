@@ -7,13 +7,14 @@ const eventSchema = new mongoose.Schema({
     _id:Number,
     title:{type:String, required:true},
     date:{type:Date, required:true},
-    mainSpeaker:{type: Number, ref: "speakers"},
+    mainSpeaker:{type: Number, ref: "speaker"},
     otherSpeakers:[
-        {type: Number, ref: "speakers"}
+        {type: Number, ref: "speaker"}
     ],
     students:[
-        {type: Number, ref: "students"}
-      ]
+        {type: Number, ref: "student"}
+      ],
+    accepted:{type: Number}
 });
 
 const events = mongoose.model("event", eventSchema);

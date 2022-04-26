@@ -8,8 +8,8 @@ const router = express.Router();
 /* ----------------------------- Creating Router ---------------------------- */
 router.route("/Speaker")
 .get(speakerController.get)
-.put()
-.delete();
+.put(speakerController.validationArray.put,speakerController.put)
+.delete(speakerController.delete);
 /* -------------------------------------------------------------------------- */
 
 /* ---------------------------- Exporting Router ---------------------------- */

@@ -8,11 +8,11 @@ const speakerSchema = new mongoose.Schema({
     userName:{type:String, required:true},
     email:{type:String, unique:true, required:true},
     passWord:{type:String, required:true},
-    address:[{
-        city:String,
-        street:String,
-        building:String,
-    }]
+    address:{
+        city:{type:String},
+        street:{type:String},
+        building:{type:String},
+    }
 });
 
 const speakers = mongoose.model("speaker", speakerSchema);

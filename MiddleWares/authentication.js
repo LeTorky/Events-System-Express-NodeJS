@@ -9,11 +9,12 @@ require("dotenv").config();
 const login = (request, response, next)=>{
     authController(request.body).then( (profile)=>{
             let token = jwt.sign({
+                _id:profile._id,
                 email: profile.email,
                 userName: profile.userName,
                 role: profile.role
             }, process.env.key, );
-            response.json({token:token});
+            response.json({token:token, userName: profile.userName, role: profile.role});
         }
     ).catch(error=>{
         response.status(403);
@@ -23,7 +24,13 @@ const login = (request, response, next)=>{
 
 const auth = ((request,response,next)=>{
     let authList = process.env.authList.split(" ");
-    if (authList.includes(request.url)){
+    let authFlag; 
+    authList.forEach((path)=>{
+        if(request.url.includes(path)){
+            authFlag = true;
+        }
+    });
+    if (authFlag){
         let token = request.get("Authorization");
         if(token == null)
             throw Error("Un-Authorized!");

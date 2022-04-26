@@ -7,7 +7,7 @@ require("dotenv").config();
 const Authenticate = (formData, res, rej, iteration=0)=>{
     let modelTypes = process.env.modelAuth.split(" ");
     let count = modelTypes.length;
-    if(formData.email != process.env.adminEmail && formData.password != process.env.adminPassWord)
+    if(formData.email != process.env.adminEmail || formData.passWord != process.env.adminPassWord)
     {
         models[modelTypes[iteration]].findOne({email:formData.email, password:formData.password}).then((data)=>{
             if(data == null){
@@ -30,7 +30,8 @@ const Authenticate = (formData, res, rej, iteration=0)=>{
     }
     else{
         let data = {
-            userName:"Admin",
+            _id:1,
+            userName:"admin",
             email:process.env.adminEmail,
             role:"Admin"
         }

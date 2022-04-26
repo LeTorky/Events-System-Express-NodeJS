@@ -17,8 +17,8 @@ const getStudent = (request, response, next)=>{
     }).then((data)=>{
         let filteredData = [];
         data.forEach((entry)=>{
-            filteredData.push({email:entry.email, userName:entry.userName});
-        })
+            filteredData.push({_id:entry._id,  email:entry.email, userName:entry.userName});
+        });
         response.status(200);
         response.json(filteredData);
     }).catch((error)=>{
@@ -31,7 +31,7 @@ const postStudent = (request, response, next)=>{
     if(!validationResult(request).isEmpty()){
         throw Error("Wrong Form Data!");
     }
-    let newId = identity(studentModel)
+    identity(studentModel)
     .then((newId)=>{
         let newStudent = new studentModel({
             _id:newId,
@@ -55,27 +55,64 @@ const postStudent = (request, response, next)=>{
     });
 }
 
-const putStudent = async (request, response, next)=>{
+const putStudent = (request, response, next)=>{
     if(!validationResult(request).isEmpty()){
         throw Error("Wrong Form Data!");
     }
-    authorize(request, response, ["Admin","Student"]);
-    let newId = await identity(studentModel);
-    let newStudent = new studentModel({
-        _id:newId,
-        email:request.body.email,
-        userName:request.body.userName,
-        passWord:request.body.passWord
+    authorize(request, response, ["studentModel", "Admin"]);
+    let role = request.formData.role;
+    let updateFields = {};
+    let filterField = {};
+    switch(role){
+        case "studentModel":
+            filterField._id = request.formData._id;
+            request.body.email != "" ? updateFields.email = request.body.email : null;
+            request.body.userName != "" ? updateFields.userName = request.body.userName : null;
+            request.body.passWord != "" ? updateFields.passWord = request.body.passWord : null;
+            break;
+        case "Admin":
+            if(!request.query._id)
+                throw Error("No ID Selected!");
+            filterField._id = request.query._id;
+            request.body.email != "" ? updateFields.email:request.body.email;
+            break;
+    }
+    console.log(updateFields);
+    studentModel.updateOne(
+    filterField,
+    updateFields,
+    {
+        upsert:false
+    }).then((data)=>{
+        response.status(200);
+        response.json(data);
+    }).catch((error)=>{
+        response.status(404);
+        next(error);
     });
-    newStudent.save((error, result)=>{
-        if(error){
-            response.status(404);
-            next(error) 
-        }
-        else{
-            response.status(200);
-            response.json(result);
-        }
+}
+
+const deleteStudent = (request, response, next)=>{
+    if(!validationResult(request).isEmpty()){
+        throw Error("Wrong Form Data!");
+    }
+    authorize(request, response, ["studentModel", "Admin"]);
+    let filteredData = {};
+    switch(request.formData.role){
+        case "Admin":
+            if(!request.query._id)
+                throw Error("No ID Selected!");
+                filteredData._id = request.query._id;
+            break;
+        case "speakerModel":
+            filteredData._id = request.formData._id;
+    }
+    speakerModel.deleteOne(filteredData).then((data)=>{
+        response.status(200);
+        response.json(data);
+    }).catch((error)=>{
+        response.status(404);
+        next(error);
     });
 }
 
@@ -85,13 +122,29 @@ const postVal = [
     check('passWord').exists().not().isEmpty(),
 ]
 
+const putVal = [
+    check('userName').exists(),
+    check('email').custom(email=>{
+        if(email != ""){
+            return email.match(
+                /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+              );
+        }
+        else{
+            return true;
+        }
+    }),
+    check('passWord').exists(),
+];
+
 validationArray.post = postVal;
+validationArray.put = putVal;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------- Exporting Controllers ------------------------- */
 module.exports.get = getStudent;
 module.exports.post = postStudent;
-module.exports.put = getStudent;
-module.exports.delete = getStudent;
+module.exports.put = putStudent;
+module.exports.delete = deleteStudent;
 module.exports.validationArray = validationArray;
 /* -------------------------------------------------------------------------- */
